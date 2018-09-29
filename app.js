@@ -3,6 +3,8 @@ const request = require('request');
 const he = require('he');
 const app = express();
 
+var port = process.env.PORT || 8080;
+
 app.set('json spaces', 2);
 
 app.get('/', function (req, res) {
@@ -27,8 +29,8 @@ app.get('/stats/:rarity-:level', function (req, res) {
   });
 })
 
-app.listen(3000, function () {
-    console.log('Listening on port 3000')
+app.listen(port, function () {
+    console.log('Listening on port ' + port)
 })
 
 function formatStats(data) {
