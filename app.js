@@ -8,10 +8,10 @@ var port = process.env.PORT || 8080;
 app.set('json spaces', 2);
 
 app.get('/', function (req, res) {
-    res.send('FEH Stats API: /stats/{rarity}-{level}');
+    res.send('FEH Stats API: /stats/{rarity}_{level}');
 })
 
-app.get('/stats/:rarity-:level', function (req, res) {
+app.get('/stats/:rarity_:level', function (req, res) {
   var maxLevel = req.params.level == 40 ? true : false;
   var formData = {
     action: 'cargoquery',
