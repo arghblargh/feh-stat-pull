@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true })); // to support URL-encoded bodie
 app.get('/', function (req, res) {
     res.send('FEH Stats API<br />\
               <ul>\
-                <li>Stats: GET /stats/{rarity}-{level}</li>\
+                <li>Stats 5* Lv1: GET /stats</li>\
                 <li>Stat Growths: GET /stats/growths</li>\
                 <li>Unit Info:</li>\
                 <ul>\
@@ -23,15 +23,13 @@ app.get('/', function (req, res) {
               </ul>');
 });
 
-app.get('/stats/:rarity-:level', function (req, res) {
-  var maxLevel = req.params.level == 40 ? true : false;
+app.get('/stats', function (req, res) {
   var formData = {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: maxLevel ? 'HeroMaxStats' : 'HeroBaseStats',
-    fields: '_pageName=Name,HP,Atk,Spd,Def,Res',
-    where: 'Variation="Neut" and Rarity=' + req.params.rarity
+    tables: 'HeroStats',
+    fields: '_pageName=Name,Lv1HP5,Lv1Atk5,Lv1Spd5,Lv1Def5,Lv1Res5'
   }
   request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
     if (err) {
@@ -46,14 +44,14 @@ app.get('/stats/growths', function (req, res) {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: 'HeroGrowths',
-    fields: '_pageName=Name,HP,Atk,Spd,Def,Res'
+    tables: 'HeroStats',
+    fields: '_pageName=Name,HPGR3,AtkGR3,SpdGR3,DefGR3,ResGR3'
   }
   request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
     if (err) {
       return console.error('request failed: ', err);
     }
-    res.json(formatStats(JSON.parse(body)));
+    res.json(formatGrowths(JSON.parse(body)));
   });
 });
 
@@ -117,16 +115,31 @@ app.listen(port, function () {
   console.log('Listening on port ' + port)
 });
 
-function formatStats(data) {
+function formatStats(data, rarity, level) {
   var result = {};
   for (var unit of data.cargoquery) {
     var name = he.decode(unit.title.Name);
     result[name] = {
-      HP: parseInt(unit.title.HP, 10),
-      Atk: parseInt(unit.title.Atk, 10),
-      Spd: parseInt(unit.title.Spd, 10),
-      Def: parseInt(unit.title.Def, 10),
-      Res: parseInt(unit.title.Res, 10)
+      HP: parseInt(unit.title.Lv1HP5, 10),
+      Atk: parseInt(unit.title.Lv1Atk5, 10),
+      Spd: parseInt(unit.title.Lv1Spd5, 10),
+      Def: parseInt(unit.title.Lv1Def5, 10),
+      Res: parseInt(unit.title.Lv1Res5, 10)
+    }
+  }
+  return result;
+}
+
+function formatGrowths(data) {
+  var result = {};
+  for (var unit of data.cargoquery) {
+    var name = he.decode(unit.title.Name);
+    result[name] = {
+      HP: parseInt(unit.title.HPGR3, 10),
+      Atk: parseInt(unit.title.AtkGR3, 10),
+      Spd: parseInt(unit.title.SpdGR3, 10),
+      Def: parseInt(unit.title.DefGR3, 10),
+      Res: parseInt(unit.title.ResGR3, 10)
     }
   }
   return result;
