@@ -17,6 +17,7 @@ app.get('/', function (req, res) {
                 <li>Unit Info:</li>\
                 <ul>\
                   <li>All units: GET /units</li>\
+                  <li>Base rarity of all units: GET /units/rarity</li>\
                   <li>One unit: GET /units/{unit_name}</li>\
                   <li>List of units: POST /units</li>\
                 </ul>\
@@ -52,6 +53,22 @@ app.get('/stats/growths', function (req, res) {
       return console.error('request failed: ', err);
     }
     res.json(formatGrowths(JSON.parse(body)));
+  });
+});
+
+app.get('/units/rarity', function (req, res) {
+  var formData = {
+    action: 'cargoquery',
+    format: 'json',
+    limit: '500',
+    tables: 'Heroes',
+    fields: '_pageName=Name,Title,SummonRarities,RewardRarities'
+  }
+  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+    if (err) {
+      return console.error('request failed: ', err);
+    }
+    res.json(formatUnitRarity(JSON.parse(body)));
   });
 });
 
@@ -199,6 +216,17 @@ function formatUnits(data, withSkills) {
         ]
       }
     }
+  }
+  return result;
+}
+
+function formatUnitRarity(data) {
+  var result = {};
+  for (var unit of data.cargoquery) {
+    var name = he.decode(unit.title.Name);
+    var summon = unit.title.SummonRarities ? parseInt(unit.title.SummonRarities[0], 10) : 5;
+    var reward = unit.title.RewardRarities ? parseInt(unit.title.RewardRarities[0], 10) : 5;
+    result[name] = Math.min(summon, reward);
   }
   return result;
 }
