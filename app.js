@@ -29,7 +29,7 @@ app.get('/stats', function (req, res) {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: 'HeroStats',
+    tables: 'UnitStats',
     fields: '_pageName=Name,Lv1HP5,Lv1Atk5,Lv1Spd5,Lv1Def5,Lv1Res5'
   }
   request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
@@ -45,7 +45,7 @@ app.get('/stats/growths', function (req, res) {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: 'HeroStats',
+    tables: 'UnitStats',
     fields: '_pageName=Name,HPGR3,AtkGR3,SpdGR3,DefGR3,ResGR3'
   }
   request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
