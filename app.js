@@ -57,19 +57,55 @@ app.get('/stats/growths', function (req, res) {
 });
 
 app.get('/units/rarity', async (req, res) => {
+  var data = [];
+
   var formData = {
     action: 'cargoquery',
     format: 'json',
-    limit: '500',
+    limit: '5000',
     tables: 'Distributions',
-    fields: 'Unit,Rarity'
+    fields: 'Unit,Rarity',
+	  group_by: 'Unit,Rarity'
   }
-  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
     if (err) {
       return console.error('request failed: ', err);
     }
-    res.json(formatUnitRarity(JSON.parse(body)));
+    data = data.concat(preUnitRarity(JSON.parse(body)));
   });
+
+  formData = {
+    action: 'cargoquery',
+    format: 'json',
+    limit: '5000',
+	  tables: 'SummoningAvailability',
+	  fields: '_pageName=Unit,Rarity',
+	  group_by: 'Unit,Rarity'
+  }
+  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+    if (err) {
+      return console.error('request failed: ', err);
+    }
+    data = data.concat(preUnitRarity(JSON.parse(body)));
+  });
+
+  formData = {
+    action: 'cargoquery',
+    format: 'json',
+    limit: '5000',
+    tables: 'SummoningFocusHeroes,Units',
+    fields: 'Units._pageName=Unit,Rarity',
+    where: "Units._pageName IS NOT NULL AND IFNULL(Properties__full,'') NOT LIKE '%enemy%' AND Rarity IS NOT NULL",
+    join_on: 'SummoningFocusHeroes.Heroes HOLDS Units._pageName',
+	  group_by: 'Unit,Rarity'
+  }
+  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+    if (err) {
+      return console.error('request failed: ', err);
+    }
+    data = data.concat(preUnitRarity(JSON.parse(body)));
+  });
+  res.json(formatUnitRarity(data.sort((a,b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)));
 });
 
 app.get('/units', function (req, res) {
@@ -250,12 +286,21 @@ function formatUnits(data, withSkills) {
   return result;
 }
 
-function formatUnitRarity(data) {
-  var result = {};
+function preUnitRarity(data) {
+  var result = [];
   for (var unit of data.cargoquery) {
     var name = he.decode(unit.title.Unit);
-    var summon = parseInt(unit.title.Rarity[0], 10);
-    result[name] = summon;
+    var rarity = parseInt(unit.title.Rarity[0], 10);
+    result.push({name: name, rarity: rarity});
+  }
+  return result;
+}
+
+function formatUnitRarity(data) {
+  var result = {};
+  for (var unit of data) {
+    if (!result[unit.name] || result[unit.name] && unit.rarity < result[unit.name])
+      result[unit.name] = unit.rarity;
   }
   return result;
 }
