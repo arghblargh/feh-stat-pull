@@ -32,11 +32,11 @@ app.get('/stats', function (req, res) {
     tables: 'UnitStats',
     fields: '_pageName=Name,Lv1HP5,Lv1Atk5,Lv1Spd5,Lv1Def5,Lv1Res5'
   }
-  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, async (err, response, body) => {
     if (err) {
       return console.error('request failed: ', err);
     }
-    res.json(formatStats(JSON.parse(body)));
+    res.json(await formatStats(JSON.parse(body)));
   });
 });
 
@@ -48,15 +48,15 @@ app.get('/stats/growths', function (req, res) {
     tables: 'UnitStats',
     fields: '_pageName=Name,HPGR3,AtkGR3,SpdGR3,DefGR3,ResGR3'
   }
-  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, async (err, response, body) => {
     if (err) {
       return console.error('request failed: ', err);
     }
-    res.json(formatGrowths(JSON.parse(body)));
+    res.json(await formatGrowths(JSON.parse(body)));
   });
 });
 
-app.get('/units/rarity', function (req, res) {
+app.get('/units/rarity', async (req, res) => {
   var formData = {
     action: 'cargoquery',
     format: 'json',
@@ -132,31 +132,60 @@ app.listen(port, function () {
   console.log('Listening on port ' + port)
 });
 
-function formatStats(data, rarity, level) {
+async function getHeroNames() {
+  var result = [];
+  var formData = {
+    action: 'cargoquery',
+    format: 'json',
+    limit: '500',
+    tables: 'Heroes',
+    fields: '_pageName=Name'
+  }
+  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+    if (err) {
+      return console.error('request failed: ', err);
+    }
+    
+    for (var unit of JSON.parse(body).cargoquery) {
+      result.push(he.decode(unit.title.Name));
+    }
+  });
+  return result;
+}
+
+async function formatStats(data, rarity, level) {
+  var heroes = await getHeroNames();
   var result = {};
   for (var unit of data.cargoquery) {
     var name = he.decode(unit.title.Name);
-    result[name] = {
-      HP: parseInt(unit.title.Lv1HP5, 10),
-      Atk: parseInt(unit.title.Lv1Atk5, 10),
-      Spd: parseInt(unit.title.Lv1Spd5, 10),
-      Def: parseInt(unit.title.Lv1Def5, 10),
-      Res: parseInt(unit.title.Lv1Res5, 10)
+    if (heroes.includes(name))
+    {
+      result[name] = {
+        HP: parseInt(unit.title.Lv1HP5, 10),
+        Atk: parseInt(unit.title.Lv1Atk5, 10),
+        Spd: parseInt(unit.title.Lv1Spd5, 10),
+        Def: parseInt(unit.title.Lv1Def5, 10),
+        Res: parseInt(unit.title.Lv1Res5, 10)
+      }
     }
   }
   return result;
 }
 
-function formatGrowths(data) {
+async function formatGrowths(data) {
+  var heroes = await getHeroNames();
   var result = {};
   for (var unit of data.cargoquery) {
     var name = he.decode(unit.title.Name);
-    result[name] = {
-      HP: parseInt(unit.title.HPGR3, 10),
-      Atk: parseInt(unit.title.AtkGR3, 10),
-      Spd: parseInt(unit.title.SpdGR3, 10),
-      Def: parseInt(unit.title.DefGR3, 10),
-      Res: parseInt(unit.title.ResGR3, 10)
+    if (heroes.includes(name))
+    {
+      result[name] = {
+        HP: parseInt(unit.title.HPGR3, 10),
+        Atk: parseInt(unit.title.AtkGR3, 10),
+        Spd: parseInt(unit.title.SpdGR3, 10),
+        Def: parseInt(unit.title.DefGR3, 10),
+        Res: parseInt(unit.title.ResGR3, 10)
+      }
     }
   }
   return result;
