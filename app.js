@@ -61,8 +61,8 @@ app.get('/units/rarity', async (req, res) => {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: 'Heroes',
-    fields: '_pageName=Name,Title,SummonRarities,RewardRarities'
+    tables: 'Distributions',
+    fields: 'Unit,Rarity'
   }
   request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
     if (err) {
@@ -253,10 +253,9 @@ function formatUnits(data, withSkills) {
 function formatUnitRarity(data) {
   var result = {};
   for (var unit of data.cargoquery) {
-    var name = he.decode(unit.title.Name);
-    var summon = unit.title.SummonRarities ? parseInt(unit.title.SummonRarities[0], 10) : 5;
-    var reward = unit.title.RewardRarities ? parseInt(unit.title.RewardRarities[0], 10) : 5;
-    result[name] = Math.min(summon, reward);
+    var name = he.decode(unit.title.Unit);
+    var summon = parseInt(unit.title.Rarity[0], 10);
+    result[name] = summon;
   }
   return result;
 }
