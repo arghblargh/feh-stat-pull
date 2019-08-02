@@ -138,8 +138,9 @@ async function getHeroNames() {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: 'Heroes',
-    fields: '_pageName=Name'
+    tables: 'Units',
+    fields: '_pageName=Name',
+    where: "IFNULL(Properties__full,'') NOT LIKE '%enemy%'"
   }
   await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
     if (err) {
