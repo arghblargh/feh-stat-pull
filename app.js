@@ -62,7 +62,7 @@ app.get('/units/rarity', async (req, res) => {
   var formData = {
     action: 'cargoquery',
     format: 'json',
-    limit: '5000',
+    limit: '500',
     tables: 'Distributions',
     fields: 'Unit,Rarity',
 	  group_by: 'Unit,Rarity'
@@ -77,7 +77,7 @@ app.get('/units/rarity', async (req, res) => {
   formData = {
     action: 'cargoquery',
     format: 'json',
-    limit: '5000',
+    limit: '500',
 	  tables: 'SummoningAvailability',
 	  fields: '_pageName=Unit,Rarity',
 	  group_by: 'Unit,Rarity'
@@ -92,11 +92,11 @@ app.get('/units/rarity', async (req, res) => {
   formData = {
     action: 'cargoquery',
     format: 'json',
-    limit: '5000',
-    tables: 'SummoningFocusHeroes,Units',
-    fields: 'Units._pageName=Unit,Rarity',
-    where: "Units._pageName IS NOT NULL AND IFNULL(Properties__full,'') NOT LIKE '%enemy%' AND Rarity IS NOT NULL",
-    join_on: 'SummoningFocusHeroes.Heroes HOLDS Units._pageName',
+    limit: '500',
+    tables: 'SummoningFocusUnits,Units=U',
+    fields: 'U._pageName=Unit,Rarity',
+    where: "U._pageName IS NOT NULL AND IFNULL(Properties__full,'') NOT LIKE '%enemy%' AND Rarity IS NOT NULL",
+    join_on: 'SummoningFocusUnits.Units HOLDS U._pageName',
 	  group_by: 'Unit,Rarity'
   }
   await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
@@ -288,6 +288,7 @@ function formatUnits(data, withSkills) {
 
 function preUnitRarity(data) {
   var result = [];
+  console.log(data);
   for (var unit of data.cargoquery) {
     var name = he.decode(unit.title.Unit);
     var rarity = parseInt(unit.title.Rarity[0], 10);
