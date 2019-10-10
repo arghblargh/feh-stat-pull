@@ -63,41 +63,45 @@ app.get('/units/rarity', async (req, res) => {
     action: 'cargoquery',
     format: 'json',
     limit: '500',
-    tables: 'Distributions',
-    fields: 'Unit,Rarity',
-	  group_by: 'Unit,Rarity'
-  }
-  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
-    if (err) {
-      return console.error('request failed: ', err);
-    }
-    data = data.concat(preUnitRarity(JSON.parse(body)));
-  });
-
-  formData = {
-    action: 'cargoquery',
-    format: 'json',
-    limit: '500',
-	  tables: 'SummoningAvailability',
-	  fields: '_pageName=Unit,Rarity',
-	  group_by: 'Unit,Rarity'
-  }
-  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
-    if (err) {
-      return console.error('request failed: ', err);
-    }
-    data = data.concat(preUnitRarity(JSON.parse(body)));
-  });
-
-  formData = {
-    action: 'cargoquery',
-    format: 'json',
-    limit: '500',
-    tables: 'SummoningFocusUnits,Units=U',
-    fields: 'U._pageName=Unit,Rarity',
+    tables: 'Distributions,Units=U',
+    fields: 'U._pageName=page,Rarity',
     where: "U._pageName IS NOT NULL AND IFNULL(Properties__full,'') NOT LIKE '%enemy%' AND Rarity IS NOT NULL",
-    join_on: 'SummoningFocusUnits.Units HOLDS U._pageName',
-	  group_by: 'Unit,Rarity'
+    join_on: 'Distributions.Unit=U._pageName',
+    group_by: 'page,Rarity'
+  }
+  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+    if (err) {
+      return console.error('request failed: ', err);
+    }
+    data = data.concat(preUnitRarity(JSON.parse(body)));
+  });
+
+  formData = {
+    action: 'cargoquery',
+    format: 'json',
+    limit: '500',
+	  tables: 'SummoningAvailability,Units=U',
+	  fields: 'U._pageName=page,Rarity',
+    where: "U._pageName IS NOT NULL AND IFNULL(Properties__full,'') NOT LIKE '%enemy%' AND Rarity IS NOT NULL",
+    join_on: 'SummoningAvailability._pageName=U._pageName',
+	  group_by: 'page,Rarity'
+  }
+  await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
+    if (err) {
+      return console.error('request failed: ', err);
+    }
+    data = data.concat(preUnitRarity(JSON.parse(body)));
+  });
+
+  formData = {
+    action: 'cargoquery',
+    format: 'json',
+    limit: '500',
+    tables: 'SummoningFocusUnits=SFU,Units=U',
+    fields: 'U._pageName=page,Rarity',
+    where: "U.WikiName IS NOT NULL AND Rarity IS NOT NULL",
+    join_on: 'SFU.Unit=U.WikiName',
+	  group_by: 'page,Rarity'
   }
   await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, function (err, response, body) {
     if (err) {
@@ -288,9 +292,8 @@ function formatUnits(data, withSkills) {
 
 function preUnitRarity(data) {
   var result = [];
-  console.log(data);
   for (var unit of data.cargoquery) {
-    var name = he.decode(unit.title.Unit);
+    var name = he.decode(unit.title.page);
     var rarity = parseInt(unit.title.Rarity[0], 10);
     result.push({name: name, rarity: rarity});
   }
