@@ -30,14 +30,29 @@ app.get('/stats', function (req, res) {
     format: 'json',
     limit: '500',
     tables: 'UnitStats',
-    fields: '_pageName=Name,Lv1HP5,Lv1Atk5,Lv1Spd5,Lv1Def5,Lv1Res5'
+    fields: '_pageName=Name,Lv1HP5,Lv1Atk5,Lv1Spd5,Lv1Def5,Lv1Res5',
+    offset: '0'
   }
-  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, async (err, response, body) => {
-    if (err) {
-      return console.error('request failed: ', err);
+  var result = {}, i = 1;
+
+  (async function loop() {
+    while (i > 0) {
+      await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, async (err, response, body) => {
+        if (err) {
+          return console.error('request failed: ', err);
+        }
+        let temp = await formatStats(JSON.parse(body));
+        if (Object.keys(temp).length == 0) {
+          i = -1;
+        }
+        else {
+          result = Object.assign(result, temp);
+          formData.offset = '' + (i++ * 500 + 1);
+        }
+      });
     }
-    res.json(await formatStats(JSON.parse(body)));
-  });
+    res.json(result);
+  })();
 });
 
 app.get('/stats/growths', function (req, res) {
@@ -48,12 +63,26 @@ app.get('/stats/growths', function (req, res) {
     tables: 'UnitStats',
     fields: '_pageName=Name,HPGR3,AtkGR3,SpdGR3,DefGR3,ResGR3'
   }
-  request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, async (err, response, body) => {
-    if (err) {
-      return console.error('request failed: ', err);
+  var result = {}, i = 1;
+
+  (async function loop() {
+    while (i > 0) {
+      await request.post({ url:'https://feheroes.gamepedia.com/api.php', formData: formData }, async (err, response, body) => {
+        if (err) {
+          return console.error('request failed: ', err);
+        }
+        let temp = await formatGrowths(JSON.parse(body));
+        if (Object.keys(temp).length == 0) {
+          i = -1;
+        }
+        else {
+          result = Object.assign(result, temp);
+          formData.offset = '' + (i++ * 500 + 1);
+        }
+      });
     }
-    res.json(await formatGrowths(JSON.parse(body)));
-  });
+    res.json(result);
+  })();
 });
 
 app.get('/units/rarity', async (req, res) => {
