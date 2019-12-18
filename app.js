@@ -47,7 +47,7 @@ app.get('/stats', function (req, res) {
         }
         else {
           result = Object.assign(result, temp);
-          formData.offset = '' + (i++ * 500 + 1);
+          formData.offset = '' + (i++ * 500);
         }
       });
     }
@@ -77,7 +77,7 @@ app.get('/stats/growths', function (req, res) {
         }
         else {
           result = Object.assign(result, temp);
-          formData.offset = '' + (i++ * 500 + 1);
+          formData.offset = '' + (i++ * 500);
         }
       });
     }
