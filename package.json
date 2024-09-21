@@ -11,7 +11,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "4.19.2",
+    "express": "4.20.0",
     "he": "1.2.0",
     "request": "2.88.0",
     "request-promise": "^4.2.2"
